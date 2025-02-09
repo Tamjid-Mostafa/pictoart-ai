@@ -1,118 +1,91 @@
-import Image from 'next/image';
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
+"use client";
+
+import { useState } from "react";
+import { motion } from "framer-motion"; // updated import for Framer Motion
+import {
+  Sparkles,
+  Image as ImageIcon,
+  Lightbulb,
+  Send,
+  Wand2,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { ModeToggle } from "@/components/mode-toggle";
+import { useToast } from "@/hooks/use-toast";
+import Preview from "@/components/Preview";
+import Suggestions from "@/components/SuggestionComponent";
+import PromptInput from "@/components/PromptInput";
 
 export default function Home() {
+  const [prompt, setPrompt] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedImage, setGeneratedImage] = useState("");
+  const { toast } = useToast();
+  const handleGenerate = async () => {
+    if (!prompt) return;
+    setIsGenerating(true);
+    setGeneratedImage("");
+    try {
+      const response = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt }),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        // Throw error with message from API (this could be the rate limit message)
+        throw new Error(errorData.message || "Failed to generate image");
+      }
+      const data = await response.json();
+      // Prepend the data URI scheme to the base64 result
+      setGeneratedImage(`data:image/png;base64,${data.photo}`);
+    } catch (error: any) {
+      console.error(error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to generate image",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   return (
-    <div>
-      {/* Hero Section */}
-      <section className="relative">
-        <div className="absolute inset-0">
-          <Image
-            src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48"
-            alt="Fitness background"
-            fill
-            className="object-cover brightness-50"
-            priority
+    <div className="min-h-screen gradient-bg relative overflow-x-hidden">
+      {/* Decorative Blobs */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -left-40 w-80 h-80 bg-blue-500/30 dark:bg-blue-500/20 blur-3xl blob-spin" />
+        <div className="absolute top-1/2 -right-40 w-96 h-96 bg-purple-500/30 dark:bg-purple-500/20 blur-3xl blob" />
+        <div className="absolute -bottom-40 left-1/3 w-72 h-72 bg-pink-500/30 dark:bg-pink-500/20 blur-3xl blob-spin" />
+      </div>
+
+      <main className="container mx-auto px-4 py-6 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Panel - Input and Suggestions */}
+          <div className="lg:col-span-1 space-y-4 lg:sticky lg:top-24 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto scrollbar-hide">
+            {/* Prompt Input */}
+            <PromptInput
+              prompt={prompt}
+              onPromptChange={setPrompt}
+              onGenerate={handleGenerate}
+              isGenerating={isGenerating}
+            />
+            {/* Suggestions */}
+            <Suggestions onSelectSuggestion={setPrompt} />
+          </div>
+
+          {/* Right Panel: Preview */}
+          <Preview
+            prompt={prompt}
+            isGenerating={isGenerating}
+            generatedImage={generatedImage}
           />
         </div>
-        <div className="relative mx-auto max-w-7xl px-4 py-32 sm:px-6 lg:px-8">
-          <div className="max-w-2xl">
-            <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl md:text-6xl">
-              Transform Your Life Through Fitness
-            </h1>
-            <p className="mt-6 max-w-xl text-xl text-gray-300">
-              Track your workouts, monitor your progress, and achieve your fitness goals
-              with our comprehensive platform.
-            </p>
-            <div className="mt-10 flex gap-4">
-              <Button size="lg" asChild>
-                <Link href="/workouts">Get Started</Link>
-              </Button>
-              <Button size="lg" variant="outline" asChild>
-                <Link href="/about">Learn More</Link>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="py-24">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-12 md:grid-cols-3">
-            <div className="flex flex-col items-center text-center">
-              <div className="mb-4 rounded-full bg-primary/10 p-4">
-                <svg
-                  className="h-6 w-6 text-primary"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                  />
-                </svg>
-              </div>
-              <h3 className="mb-2 text-xl font-semibold">Track Progress</h3>
-              <p className="text-muted-foreground">
-                Monitor your fitness journey with detailed analytics and progress tracking.
-              </p>
-            </div>
-            <div className="flex flex-col items-center text-center">
-              <div className="mb-4 rounded-full bg-primary/10 p-4">
-                <svg
-                  className="h-6 w-6 text-primary"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <h3 className="mb-2 text-xl font-semibold">Workout Plans</h3>
-              <p className="text-muted-foreground">
-                Access personalized workout plans tailored to your fitness goals.
-              </p>
-            </div>
-            <div className="flex flex-col items-center text-center">
-              <div className="mb-4 rounded-full bg-primary/10 p-4">
-                <svg
-                  className="h-6 w-6 text-primary"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"
-                  />
-                </svg>
-              </div>
-              <h3 className="mb-2 text-xl font-semibold">Nutrition Tracking</h3>
-              <p className="text-muted-foreground">
-                Log your meals and track your nutritional intake with our easy-to-use tools.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+      </main>
     </div>
   );
 }

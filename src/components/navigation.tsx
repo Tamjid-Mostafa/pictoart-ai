@@ -1,110 +1,30 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Dumbbell, Menu, X } from "lucide-react";
 import { ModeToggle } from "./mode-toggle";
-import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "./ui/sheet";
-import VisuallyHidden from "./ui/visually-hidden";
-
+// React Server Components
+import * as motion from "motion/react-client"
+import { Sparkles, Wand2 } from "lucide-react";
 export function Navigation() {
   return (
-    <nav className="border-b">
-      <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
-        <div className="flex h-16 justify-between">
-          <div className="flex">
-            <Link href="/" className="flex items-center">
-              <Dumbbell className="h-6 w-6" />
-              <span className="ml-2 text-xl font-bold">FitLife</span>
-            </Link>
+    <motion.header
+      className="glass-effect border-b border-white/20 sticky top-0 z-50"
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <Wand2
+              className="h-8 w-8 text-primary absolute animate-pulse"
+              style={{ opacity: 0.5 }}
+            />
+            <Sparkles className="h-8 w-8 text-primary relative z-10" />
           </div>
-
-          {/* Desktop navigation */}
-          <div className="hidden md:flex md:items-center md:space-x-6">
-            <SignedIn>
-              <Link
-                href="/workouts"
-                className="text-sm font-medium hover:text-primary"
-              >
-                Workouts
-              </Link>
-              <Link
-                href="/nutrition"
-                className="text-sm font-medium hover:text-primary"
-              >
-                Nutrition
-              </Link>
-              <Link
-                href="/progress"
-                className="text-sm font-medium hover:text-primary"
-              >
-                Progress
-              </Link>
-            </SignedIn>
-            <ModeToggle />
-            <nav className="flex gap-2">
-              <SignedIn>
-                <UserButton afterSwitchSessionUrl="/" />
-              </SignedIn>
-              <SignedOut>
-                <Button asChild className="">
-                  <Link href="/sign-in">Login</Link>
-                </Button>
-              </SignedOut>
-            </nav>
-          </div>
-
-          {/* Mobile menu button */}
-          <div className="flex items-center md:hidden">
-            <ModeToggle />
-            <SignedIn>
-              <UserButton afterSwitchSessionUrl="/" />
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button variant="ghost">
-                    <Menu className="h-6 w-6" />
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side={"right"}>
-                  <VisuallyHidden>
-                    <SheetTitle>Menu</SheetTitle>
-                  </VisuallyHidden>
-                  <div className="space-y-1 px-4 pb-3 pt-2">
-                    <Link
-                      href="/workouts"
-                      className="block px-3 py-2 text-base font-medium hover:bg-muted"
-                    >
-                      Workouts
-                    </Link>
-                    <Link
-                      href="/nutrition"
-                      className="block px-3 py-2 text-base font-medium hover:bg-muted"
-                    >
-                      Nutrition
-                    </Link>
-                    <Link
-                      href="/progress"
-                      className="block px-3 py-2 text-base font-medium hover:bg-muted"
-                    >
-                      Progress
-                    </Link>
-                    <Link
-                      href="/profile"
-                      className="block px-3 py-2 text-base font-medium hover:bg-muted"
-                    >
-                      Profile
-                    </Link>
-                  </div>
-                </SheetContent>
-              </Sheet>
-            </SignedIn>
-            <SignedOut>
-              <Button asChild className="">
-                <Link href="/sign-in">Login</Link>
-              </Button>
-            </SignedOut>
-          </div>
+          <h1 className="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">
+            Pictoart AI
+          </h1>
         </div>
+        <ModeToggle />
       </div>
-    </nav>
+    </motion.header>
   );
 }
