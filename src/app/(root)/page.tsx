@@ -27,11 +27,11 @@ import Suggestions from "@/components/SuggestionComponent";
 import PromptInput from "@/components/PromptInput";
 
 const COLOR_PALETTES = {
-  modern: ['#2D3436', '#636E72', '#B2BEC3', '#DFE6E9'],
-  nature: ['#27AE60', '#2ECC71', '#F1C40F', '#E67E22'],
-  ocean: ['#1ABC9C', '#3498DB', '#34495E', '#ECF0F1'],
-  sunset: ['#E74C3C', '#C0392B', '#F39C12', '#F1C40F'],
-  pastel: ['#FFB3BA', '#BAFFC9', '#BAE1FF', '#FFFFBA']
+  modern: ["#2D3436", "#636E72", "#B2BEC3", "#DFE6E9"],
+  nature: ["#27AE60", "#2ECC71", "#F1C40F", "#E67E22"],
+  ocean: ["#1ABC9C", "#3498DB", "#34495E", "#ECF0F1"],
+  sunset: ["#E74C3C", "#C0392B", "#F39C12", "#F1C40F"],
+  pastel: ["#FFB3BA", "#BAFFC9", "#BAE1FF", "#FFFFBA"],
 };
 
 export default function Home() {
@@ -45,19 +45,19 @@ export default function Home() {
     if (!prompt) return;
     setIsGenerating(true);
     setGeneratedImage("");
-    
+
     try {
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt, palette }),
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || "Failed to generate image");
       }
-      
+
       const data = await response.json();
       setGeneratedImage(`data:image/png;base64,${data.photo}`);
     } catch (error: any) {
@@ -84,51 +84,55 @@ export default function Home() {
       <main className="container mx-auto px-6 py-6 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Panel - Input and Suggestions */}
-          <div className="lg:col-span-1 space-y-4 lg:sticky lg:top-24 ">
-            {/* Color Palette Selector */}
-            <Card className="p-4">
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <Palette className="w-4 h-4" />
-                  <span className="font-medium">Color Palette</span>
-                </div>
-                <Select value={palette} onValueChange={setPalette}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choose a color palette" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(COLOR_PALETTES).map(([key, colors]) => (
-                      <SelectItem key={key} value={key}>
-                        <div className="flex items-center gap-2">
-                          <div className="flex gap-1">
-                            {colors.map((color) => (
-                              <div
-                                key={color}
-                                className="w-3 h-3 rounded-full"
-                                style={{ backgroundColor: color }}
-                              />
-                            ))}
+          <>
+            <div className="lg:col-span-1 space-y-4 lg:sticky lg:top-24 ">
+              {/* Color Palette Selector */}
+              <Card className="p-4">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Palette className="w-4 h-4" />
+                    <span className="font-medium">Color Palette</span>
+                  </div>
+                  <Select value={palette} onValueChange={setPalette}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose a color palette" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(COLOR_PALETTES).map(([key, colors]) => (
+                        <SelectItem key={key} value={key}>
+                          <div className="flex items-center gap-2">
+                            <div className="flex gap-1">
+                              {colors.map((color) => (
+                                <div
+                                  key={color}
+                                  className="w-3 h-3 rounded-full"
+                                  style={{ backgroundColor: color }}
+                                />
+                              ))}
+                            </div>
+                            <span className="capitalize">{key}</span>
                           </div>
-                          <span className="capitalize">{key}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </Card>
-            
-            {/* Prompt Input */}
-            <PromptInput
-              prompt={prompt}
-              onPromptChange={setPrompt}
-              onGenerate={handleGenerate}
-              isGenerating={isGenerating}
-            />
-            
-            {/* Suggestions */}
-            <Suggestions onSelectSuggestion={setPrompt} />
-          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </Card>
+
+              {/* Prompt Input */}
+              <PromptInput
+                prompt={prompt}
+                onPromptChange={setPrompt}
+                onGenerate={handleGenerate}
+                isGenerating={isGenerating}
+              />
+
+              {/* Suggestions */}
+              <ScrollArea className="h-[500px]">
+                <Suggestions onSelectSuggestion={setPrompt} />
+              </ScrollArea>
+            </div>
+          </>
 
           {/* Right Panel: Preview */}
           <Preview

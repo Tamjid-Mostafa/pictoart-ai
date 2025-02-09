@@ -1,55 +1,79 @@
-import { motion } from "motion/react";
-import { Lightbulb } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Sparkles } from "lucide-react";
 
 interface SuggestionsProps {
   onSelectSuggestion: (suggestion: string) => void;
 }
-const suggestions = [
-  "A serene Japanese garden with cherry blossoms at sunset",
-  "A futuristic cityscape with flying cars and neon lights",
-  "An underwater scene with bioluminescent creatures",
-  "A cozy cabin in a snowy forest during winter",
-  "A steampunk-inspired mechanical butterfly",
-  "A magical library with floating books and starlit ceiling",
-];
 
 export default function Suggestions({ onSelectSuggestion }: SuggestionsProps) {
+  const suggestions = [
+    {
+      category: "Abstract & Geometric",
+      prompts: [
+        "Geometric fox head made of triangles and circles",
+        "Abstract mountain landscape with flowing lines",
+        "Minimalist maze pattern with gradient colors",
+        "Interlocking geometric shapes forming a butterfly"
+      ]
+    },
+    {
+      category: "Nature & Animals",
+      prompts: [
+        "Origami-style hummingbird in flight",
+        "Minimalist tree with spiral branches",
+        "Sacred geometry owl face design",
+        "Flowing line art of ocean waves"
+      ]
+    },
+    {
+      category: "Modern Icons",
+      prompts: [
+        "Tech-inspired brain made of circuit patterns",
+        "Minimal coffee cup with rising steam swirls",
+        "Geometric compass rose design",
+        "Line art rocket with constellation trail"
+      ]
+    },
+    {
+      category: "Artistic Concepts",
+      prompts: [
+        "Musical notes transforming into birds",
+        "Fibonacci spiral made of tiny polygons",
+        "Minimal face line art with flowing hair",
+        "Geometric mandala with nature elements"
+      ]
+    }
+  ];
+
   return (
-    <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.5, delay: 0.4 }}
-      className="space-y-3"
-    >
+    <Card className="p-4 space-y-4">
       <div className="flex items-center gap-2">
-        <Lightbulb className="h-5 w-5 text-yellow-500" />
-        <h2 className="text-lg font-semibold">Creative Suggestions</h2>
+        <Sparkles className="w-4 h-4" />
+        <h3 className="font-medium">Suggestions</h3>
       </div>
-      <Card className="glass-effect border-white/20">
-        <ScrollArea className="h-[calc(100vh-20rem)] rounded-md p-4">
-          <div className="space-y-2 pr-4">
-            {suggestions.map((suggestion, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3, delay: 0.1 * index }}
-              >
+      
+      <div className="space-y-6">
+        {suggestions.map((category) => (
+          <div key={category.category} className="space-y-2">
+            <h4 className="text-sm font-medium text-muted-foreground">
+              {category.category}
+            </h4>
+            <div className="grid grid-cols-1 gap-2">
+              {category.prompts.map((prompt) => (
                 <Button
+                  key={prompt}
                   variant="ghost"
-                  className="w-full justify-start text-left hover:bg-white/10 transition-colors"
-                  onClick={() => onSelectSuggestion(suggestion)}
+                  className="w-full justify-start text-left h-auto py-2 px-3 hover:bg-accent"
+                  onClick={() => onSelectSuggestion(prompt)}
                 >
-                  <span className="truncate">{suggestion}</span>
+                  <span className="line-clamp-2 text-sm">{prompt}</span>
                 </Button>
-              </motion.div>
-            ))}
+              ))}
+            </div>
           </div>
-        </ScrollArea>
-      </Card>
-    </motion.div>
+        ))}
+      </div>
+    </Card>
   );
 }
