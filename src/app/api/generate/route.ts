@@ -43,20 +43,20 @@ The final illustration must be visually appealing, vibrant, and reflective of th
 
 export async function POST(req: NextRequest) {
   // Identify the client (using the x-forwarded-for header or fallback)
-  // const ip = req.headers.get("x-forwarded-for") || "127.0.0.1";
+  const ip = req.headers.get("x-forwarded-for") || "127.0.0.1";
 
-  // // Check rate limit for this IP
-  // const { success } = await ratelimit.limit(ip);
-  // if (!success) {
-  //   return NextResponse.json(
-  //     {
-  //       error: "Too Many Requests",
-  //       message:
-  //         "You have reached your daily limit of 3 requests. Please try again after 24 hours.",
-  //     },
-  //     { status: 429 }
-  //   );
-  // }
+  // Check rate limit for this IP
+  const { success } = await ratelimit.limit(ip);
+  if (!success) {
+    return NextResponse.json(
+      {
+        error: "Too Many Requests",
+        message:
+          "You have reached your daily limit of 3 requests. Please try again after 24 hours.",
+      },
+      { status: 429 }
+    );
+  }
 
   try {
     const { prompt, palette = 'modern' } = await req.json();
