@@ -1,3 +1,4 @@
+import { ratelimit } from "@/lib/rateLimiter";
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 
@@ -16,23 +17,47 @@ const COLOR_PALETTES = {
   pastel: ['#FFB3BA', '#BAFFC9', '#BAE1FF', '#FFFFBA']
 };
 
-function engineerPrompt(userPrompt: string, palette: string) {
+function engineerPrompt(userPrompt: string, palette: string): string {
   const colors = COLOR_PALETTES[palette as keyof typeof COLOR_PALETTES] || COLOR_PALETTES.modern;
-  
-  return `Create a minimalist vector illustration based on: "${userPrompt}"
+  console.log(colors);
+  return `You are a master digital illustrator at PictoArt AI, specializing in vector art. Your task is to create a stunning vector illustration based on the following criteria:
 
-Style Requirements:
-1. Use ONLY these specific colors: ${colors.join(', ')}
-2. Create clean, geometric vector shapes
-3. Maintain minimalist design principles
-4. Ensure strong visual hierarchy
-5. Include subtle gradients only when necessary
-6. Make it suitable for both light and dark backgrounds
+1. **User Theme**: "${userPrompt}"
+2. **Color Palette**: Use the following color palette as your guide: ${colors.join(", ")}. These colors should dominate the illustration, with harmonious blending and thoughtful use of gradients (if applicable).
+3. **Style**: Minimalist, clean vector art with a modern aesthetic. Ensure sharp, crisp lines and bold shapes.
+4. **Composition**:
+   - Central Subject: Create a clear focal point aligned with the theme "${userPrompt}".
+   - Background: Subtle and complementary to enhance the subject without overpowering it.
+   - Negative Space: Use strategic negative space for a professional and balanced look.
+5. **Artistic Details**:
+   - Avoid realism or complex textures—focus on flat, layered vector shapes.
+   - Use gradients sparingly, only to add depth or subtle transitions.
+   - Maintain a geometric or organic flow depending on the theme.
+6. **Adaptability**:
+   - Ensure the illustration works well for both square and vertical formats.
+   - Make it scalable without losing clarity, suitable for both web and print.
 
-The illustration should be professional, scalable, and immediately recognizable.`;
+The final illustration must be visually appealing, vibrant, and reflective of the provided theme and color palette, while staying true to the vector art style.`;
 }
 
+
 export async function POST(req: NextRequest) {
+  // Identify the client (using the x-forwarded-for header or fallback)
+  const ip = req.headers.get("x-forwarded-for") || "127.0.0.1";
+
+  // Check rate limit for this IP
+  const { success } = await ratelimit.limit(ip);
+  if (!success) {
+    return NextResponse.json(
+      {
+        error: "Too Many Requests",
+        message:
+          "You have reached your daily limit of 3 requests. Please try again after 24 hours.",
+      },
+      { status: 429 }
+    );
+  }
+
   try {
     const { prompt, palette = 'modern' } = await req.json();
 
@@ -46,7 +71,7 @@ export async function POST(req: NextRequest) {
     const engineeredPrompt = engineerPrompt(prompt, palette);
     
     const response = await openai.images.generate({
-      model: "dall-e-2",
+      model: "dall-e-3",
       prompt: engineeredPrompt,
       n: 1,
       size: "1024x1024",
