@@ -1,7 +1,4 @@
-"use client";
-
-import { motion } from "framer-motion";
-import { useState } from "react";
+import * as motion from "motion/react-client";
 import Image from "next/image";
 import { 
   Wand2, 
@@ -22,6 +19,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { getAllPosts } from "@/lib/actions/post.action";
+import Hero from "@/components/Hero";
 
 const steps = [
   {
@@ -71,8 +70,8 @@ const pricingPlans = [
     features: [
       "3 free credits on sign-up",
       "Standard resolution exports",
-      "Basic color palette options",
-      "Community support"
+      // "Basic color palette options",
+      // "Community support"
     ]
   },
   {
@@ -83,9 +82,9 @@ const pricingPlans = [
     features: [
       "20 credits",
       "HD resolution exports",
-      "Advanced color controls",
-      "Priority support",
-      "Credit rollover (30 days)"
+      // "Advanced color controls",
+      // "Priority support",
+      // "Credit rollover (30 days)"
     ],
     popular: true
   },
@@ -96,39 +95,19 @@ const pricingPlans = [
     description: "Ideal for professionals",
     features: [
       "50 credits",
-      "4K resolution exports",
-      "Custom color palettes",
-      "Priority support",
-      "Credit rollover (90 days)",
-      "API access"
+      "HD resolution exports",
+      // "Custom color palettes",
+      // "Priority support",
+      // "Credit rollover (90 days)",
+      // "API access"
     ]
   }
 ];
 
-const showcaseArt = [
-  {
-    url: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800",
-    prompt: "Geometric abstract with vibrant gradients"
-  },
-  {
-    url: "https://images.unsplash.com/photo-1605721911519-3dfeb3be25e7?w=800",
-    prompt: "Minimalist tech-inspired pattern"
-  },
-  {
-    url: "https://images.unsplash.com/photo-1549490349-8643362247b5?w=800",
-    prompt: "Futuristic landscape with neon elements"
-  },
-  {
-    url: "https://images.unsplash.com/photo-1591280063444-d3c514eb6e13?w=800",
-    prompt: "Abstract fluid art composition"
-  }
-];
-
-export default function Home() {
-  const [email, setEmail] = useState("");
-
+export default async function Home() {
+  const posts = await getAllPosts();
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 to-indigo-950 text-white overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-b dark:from-slate-950 dark:to-indigo-950 text-white overflow-hidden">
       {/* Animated Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -left-40 w-80 h-80 bg-blue-500/20 blur-3xl blob-spin" />
@@ -137,61 +116,7 @@ export default function Home() {
       </div>
 
       {/* Hero Section */}
-      <section className="relative pt-20 pb-32 overflow-hidden">
-        <div className="container mx-auto px-4 relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center max-w-4xl mx-auto"
-          >
-            <div className="flex items-center justify-center gap-2 mb-6">
-              <div className="relative">
-                <Wand2 className="h-8 w-8 text-blue-400 absolute animate-pulse" style={{ opacity: 0.5 }} />
-                <Sparkles className="h-8 w-8 text-blue-400 relative z-10" />
-              </div>
-              <h1 className="text-3xl font-bold">PictoArt AI</h1>
-            </div>
-            <h2 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 text-transparent bg-clip-text">
-              AI-Powered Vector Illustrations, Instantly
-            </h2>
-            <p className="text-xl text-gray-300 mb-8">
-              Generate stunning vector artwork effortlessly. Customize colors. Download instantly.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button
-                size="lg"
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 group"
-              >
-                Get Started – Free Credits
-                <Zap className="ml-2 h-4 w-4 group-hover:animate-bounce" />
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-white/20 hover:bg-white/10"
-              >
-                View Gallery
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </div>
-            <div className="mt-8 flex items-center justify-center gap-8 text-sm text-gray-400">
-              <div className="flex items-center gap-2">
-                <Check className="h-4 w-4 text-green-400" />
-                <span>No Credit Card Required</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Check className="h-4 w-4 text-green-400" />
-                <span>3 Free Credits</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Check className="h-4 w-4 text-green-400" />
-                <span>Instant Access</span>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
+    <Hero />
 
       {/* How It Works */}
       <section className="py-20 bg-white/5">
@@ -253,7 +178,7 @@ export default function Home() {
           </motion.div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {showcaseArt.map((art, index) => (
+            {posts.map((art:Post, index:number) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -263,7 +188,7 @@ export default function Home() {
                 className="relative aspect-square rounded-lg overflow-hidden group"
               >
                 <Image
-                  src={art.url}
+                  src={art.photo}
                   alt="Showcase artwork"
                   fill
                   className="object-cover transition-transform group-hover:scale-110"
@@ -429,73 +354,6 @@ export default function Home() {
           </motion.div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="py-12 border-t border-white/10">
-        <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <Wand2 className="h-6 w-6 text-blue-400" />
-                <span className="font-bold text-xl">PictoArt AI</span>
-              </div>
-              <p className="text-gray-400">
-                The future of vector art creation, powered by artificial intelligence
-              </p>
-            </div>
-            <div>
-              <h5 className="font-semibold mb-4">Product</h5>
-              <ul className="space-y-2 text-gray-400">
-                <li>Features</li>
-                <li>Pricing</li>
-                <li>Gallery</li>
-                <li>API</li>
-              </ul>
-            </div>
-            <div>
-              <h5 className="font-semibold mb-4">Company</h5>
-              <ul className="space-y-2 text-gray-400">
-                <li>About</li>
-                <li>Blog</li>
-                <li>Careers</li>
-                <li>Contact</li>
-              </ul>
-            </div>
-            <div>
-              <h5 className="font-semibold mb-4">Stay Updated</h5>
-              <p className="text-gray-400 mb-4">
-                Get notified about new features and updates
-              </p>
-              <div className="flex gap-2">
-                <Input
-                  type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="bg-white/10 border-white/20"
-                />
-                <Button>Subscribe</Button>
-              </div>
-            </div>
-          </div>
-          <div className="flex flex-col md:flex-row justify-between items-center pt-8 border-t border-white/10">
-            <p className="text-gray-400 text-sm">
-              © 2025 PictoArt AI. All rights reserved.
-            </p>
-            <div className="flex gap-4 mt-4 md:mt-0">
-              <Button variant="ghost" size="icon">
-                <Twitter className="h-5 w-5" />
-              </Button>
-              <Button variant="ghost" size="icon">
-                <Github className="h-5 w-5" />
-              </Button>
-              <Button variant="ghost" size="icon">
-                <Instagram className="h-5 w-5" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { LogIn, Sparkles, Wand2 } from "lucide-react";
 import { SignedIn, SignedOut, SignIn, UserButton } from "@clerk/nextjs";
 import { Button } from "./ui/button";
 import { useClerk } from "@clerk/nextjs";
+import Link from "next/link";
 export function Navigation() {
   const { openSignIn } = useClerk();
   return (
@@ -16,7 +17,7 @@ export function Navigation() {
       transition={{ duration: 0.5 }}
     >
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-        <div className="flex items-center gap-3">
+        <Link href="/" className="flex items-center gap-3">
           <div className="relative">
             <Wand2
               className="h-8 w-8 text-primary absolute animate-pulse"
@@ -27,7 +28,7 @@ export function Navigation() {
           <h1 className="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">
             Pictoart AI
           </h1>
-        </div>
+        </Link>
         <div className="flex items-center gap-3">
           <ModeToggle />
           <SignedIn>

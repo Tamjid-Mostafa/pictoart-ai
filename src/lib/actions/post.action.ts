@@ -45,6 +45,9 @@ export async function getAllPosts() {
           path: "$user",
           preserveNullAndEmptyArrays: true
         }
+      },
+      {
+        $sort: { createdAt: -1 }
       }
     ]);
 

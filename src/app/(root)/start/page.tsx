@@ -89,15 +89,7 @@ export default function Home() {
   };
 
   const [posts, setPosts] = useState<
-    Array<{
-      _id: string;
-      userId: string;
-      prompt: string;
-      photo: string;
-      user: {
-        username: string | null;
-      };
-    }>
+    Array<Post>
   >([]);
 
   useEffect(() => {
@@ -244,7 +236,7 @@ export default function Home() {
               <ScrollArea className="h-[600px]">
                 <div className="grid gap-4">
                   {posts?.length > 0 ? (
-                    posts.map((post: any) => {
+                    posts.map((post) => {
                       // Remove the nested post structure since data is already at top level
                       if (!post?.photo || !post?._id) return null;
 
