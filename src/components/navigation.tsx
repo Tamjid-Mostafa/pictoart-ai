@@ -1,8 +1,13 @@
+"use client";
 import { ModeToggle } from "./mode-toggle";
 // React Server Components
-import * as motion from "motion/react-client"
-import { Sparkles, Wand2 } from "lucide-react";
+import * as motion from "motion/react-client";
+import { LogIn, Sparkles, Wand2 } from "lucide-react";
+import { SignedIn, SignedOut, SignIn, UserButton } from "@clerk/nextjs";
+import { Button } from "./ui/button";
+import { useClerk } from "@clerk/nextjs";
 export function Navigation() {
+  const { openSignIn } = useClerk();
   return (
     <motion.header
       className="glass-effect border-b border-white/20 sticky top-0 z-50"
@@ -23,7 +28,18 @@ export function Navigation() {
             Pictoart AI
           </h1>
         </div>
-        <ModeToggle />
+        <div className="flex items-center gap-3">
+          <ModeToggle />
+          <SignedIn>
+            <UserButton />
+          </SignedIn>
+          <SignedOut>
+            <Button variant="outline" onClick={() => openSignIn()}>
+              <LogIn className="h-4 w-4" />
+              Login
+            </Button>
+          </SignedOut>
+        </div>
       </div>
     </motion.header>
   );

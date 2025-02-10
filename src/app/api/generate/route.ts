@@ -1,3 +1,4 @@
+import { COLOR_PALETTES } from "@/lib/color-palettes";
 import { ratelimit } from "@/lib/rateLimiter";
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
@@ -8,44 +9,51 @@ const openai = new OpenAI({
 
 export const runtime = "edge";
 
-// Predefined color palettes
-const COLOR_PALETTES = {
-  modern: ['#2D3436', '#636E72', '#B2BEC3', '#DFE6E9'],
-  nature: ['#27AE60', '#2ECC71', '#F1C40F', '#E67E22'],
-  ocean: ['#1ABC9C', '#3498DB', '#34495E', '#ECF0F1'],
-  sunset: ['#E74C3C', '#C0392B', '#F39C12', '#F1C40F'],
-  pastel: ['#FFB3BA', '#BAFFC9', '#BAE1FF', '#FFFFBA']
-};
 
+
+/**
+ * Creates a detailed prompt that emphasizes color usage through multiple approaches
+ */
 function engineerPrompt(userPrompt: string, palette: string): string {
-  const colors = COLOR_PALETTES[palette as keyof typeof COLOR_PALETTES] || COLOR_PALETTES.modern;
-  console.log(colors);
-  return `You are a master digital illustrator at PictoArt AI, specializing in vector art. Your task is to create a stunning vector illustration based on the following criteria:
+  const paletteInfo = 
+    COLOR_PALETTES[palette as keyof typeof COLOR_PALETTES] || 
+    COLOR_PALETTES.none;
 
-1. **User Theme**: "${userPrompt}"
-2. **Color Palette**: Use the following color palette as your guide: ${colors.join(", ")}. These colors should dominate the illustration, with harmonious blending and thoughtful use of gradients (if applicable).
-3. **Style**: Minimalist, clean vector art with a modern aesthetic. Ensure sharp, crisp lines and bold shapes.
-4. **Composition**:
-   - Central Subject: Create a clear focal point aligned with the theme "${userPrompt}".
-   - Background: Subtle and complementary to enhance the subject without overpowering it.
-   - Negative Space: Use strategic negative space for a professional and balanced look.
-5. **Artistic Details**:
-   - Avoid realism or complex textures—focus on flat, layered vector shapes.
-   - Use gradients sparingly, only to add depth or subtle transitions.
-   - Maintain a geometric or organic flow depending on the theme.
-6. **Adaptability**:
-   - Ensure the illustration works well for both square and vertical formats.
-   - Make it scalable without losing clarity, suitable for both web and print.
+  // If no palette is selected, return just the user prompt
+  if (palette === 'none') {
+    return `Create an image based on this request:
 
-The final illustration must be visually appealing, vibrant, and reflective of the provided theme and color palette, while staying true to the vector art style.`;
+Creative Request: ${userPrompt}
+
+Generate the image using any colors and style that best suits the creative request.`;
+  }
+
+  // Otherwise, return the color-restricted prompt
+  const colorInstructions = paletteInfo.colors
+    .map((hex, i) => `${paletteInfo.descriptions[i]} (${hex})`)
+    .join(", ");
+
+  return `Create an image with the following STRICT color requirements:
+
+1. MANDATORY COLOR PALETTE: You must ONLY use these exact colors: ${colorInstructions}
+2. DO NOT use any colors outside this palette
+3. Style Guide: The image should be ${paletteInfo.style}
+
+Creative Request: ${userPrompt}
+
+Additional Color Instructions:
+- Ensure every element in the image uses ONLY the specified colors
+- Use color blocking and clear shapes to maintain color accuracy
+- Prioritize the dominant colors based on the subject matter
+- Create clear distinction between elements using the provided palette
+
+The final image must strictly adhere to this color palette with no additional colors or variations.`;
 }
-
-
 export async function POST(req: NextRequest) {
   // Identify the client (using the x-forwarded-for header or fallback)
   const ip = req.headers.get("x-forwarded-for") || "127.0.0.1";
 
-  // Check rate limit for this IP
+  // Rate limit check (currently commented out)
   const { success } = await ratelimit.limit(ip);
   if (!success) {
     return NextResponse.json(
@@ -59,7 +67,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { prompt, palette = 'modern' } = await req.json();
+    const { prompt, palette = "modern" } = await req.json();
 
     if (!prompt) {
       return NextResponse.json(
@@ -69,13 +77,15 @@ export async function POST(req: NextRequest) {
     }
 
     const engineeredPrompt = engineerPrompt(prompt, palette);
-    
+    // console.log("Engineered Prompt:", engineeredPrompt);
+
     const response = await openai.images.generate({
       model: "dall-e-3",
       prompt: engineeredPrompt,
       n: 1,
       size: "1024x1024",
       response_format: "b64_json",
+      quality: "standard",
     });
 
     const image = response.data[0].b64_json;

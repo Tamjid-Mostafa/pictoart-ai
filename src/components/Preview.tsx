@@ -20,7 +20,7 @@ export default function Preview({
       const response = await fetch(generatedImage);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
+      const link = document.createElement('a');
       link.href = url;
       link.download = `generated-image-${Date.now()}.png`;
       document.body.appendChild(link);
@@ -28,7 +28,7 @@ export default function Preview({
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error("Error downloading image:", error);
+      console.error('Error downloading image:', error);
     }
   };
 
@@ -39,7 +39,7 @@ export default function Preview({
       transition={{ duration: 0.5, delay: 0.6 }}
       className="lg:col-span-2"
     >
-      <Card className="glass-effect border-white/20 p-6 h-full max-h-[calc(100vh-10rem)] aspect-square flex flex-col items-center justify-center relative overflow-hidden">
+      <Card className="glass-effect border-white/20 p-6 h-full min-h-[calc(100vh-10rem)] flex flex-col items-center justify-center relative overflow-hidden">
         {isGenerating ? (
           <div className="text-center space-y-4 relative z-10">
             <div className="animate-spin">
@@ -50,9 +50,9 @@ export default function Preview({
             </p>
           </div>
         ) : generatedImage ? (
-          <div className="relative w-full flex justify-center items-center">
+          <div className="relative w-full">
             {/* Download button in top right corner */}
-            <Button
+            <Button 
               onClick={handleDownload}
               size="icon"
               variant="ghost"
