@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "./ui/textarea";
 interface PromptInputProps {
     prompt: string;
     onPromptChange: (value: string) => void;
@@ -19,8 +20,8 @@ interface PromptInputProps {
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
       >
-        <div className="flex flex-col sm:flex-row gap-2 w-full">
-          <Input
+        <div className="flex flex-col gap-2 w-full">
+          <Textarea
             placeholder="Describe your imagination..."
             value={prompt}
             onChange={(e) => onPromptChange(e.target.value)}

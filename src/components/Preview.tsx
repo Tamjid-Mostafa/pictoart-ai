@@ -1,9 +1,7 @@
 import { motion } from "motion/react";
-import { Sparkles, Image as ImageIcon, Download } from "lucide-react";
+import { Sparkles, Image as ImageIcon } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import Image from "next/image";
-
 interface PreviewProps {
   prompt: string;
   isGenerating: boolean;
@@ -15,30 +13,8 @@ export default function Preview({
   isGenerating,
   generatedImage,
 }: PreviewProps) {
-  const handleDownload = async () => {
-    try {
-      const response = await fetch(generatedImage);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `generated-image-${Date.now()}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Error downloading image:', error);
-    }
-  };
-
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.5, delay: 0.6 }}
-      className="lg:col-span-2"
-    >
+    <motion.div id="preview" layout className="lg:col-span-2">
       <Card className="glass-effect border-white/20 p-6 h-full min-h-[calc(100vh-10rem)] flex flex-col items-center justify-center relative overflow-hidden">
         {isGenerating ? (
           <div className="text-center space-y-4 relative z-10">
@@ -50,16 +26,7 @@ export default function Preview({
             </p>
           </div>
         ) : generatedImage ? (
-          <div className="relative w-full">
-            {/* Download button in top right corner */}
-            <Button 
-              onClick={handleDownload}
-              size="icon"
-              variant="ghost"
-              className="absolute top-2 right-2 z-20 bg-white/40 hover:bg-white"
-            >
-              <Download className="h-4 w-4" />
-            </Button>
+          <motion.div className="relative w-full" layoutId="preview-image">
             <Image
               src={generatedImage}
               alt="Generated illustration"
@@ -67,7 +34,7 @@ export default function Preview({
               width={1000}
               height={1000}
             />
-          </div>
+          </motion.div>
         ) : prompt ? (
           <div className="text-center space-y-4 relative z-10">
             <ImageIcon className="h-16 w-16 text-muted-foreground mx-auto" />
