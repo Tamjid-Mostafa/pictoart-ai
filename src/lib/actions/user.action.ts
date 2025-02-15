@@ -5,18 +5,70 @@ import { revalidatePath } from "next/cache";
 import { handleError } from "../utils";
 import { connectDB } from "../db/connect";
 import User from "../db/models/user.model";
+export async function generateUniqueUsername(
+  firstName: string = "",
+  lastName: string = "",
+  email: string
+): Promise<string> {
+  const cleanText = (text: string): string => {
+    return text
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '')
+      .trim();
+  };
 
+  const emailPrefix = email.split('@')[0];
+  const cleanFirstName = cleanText(firstName);
+  const cleanLastName = cleanText(lastName);
+
+  const generateUsername = (base: string, attempt: number = 0): string => {
+    if (attempt === 0) return base;
+    return `${base}${attempt}`;
+  };
+
+  const usernameCandidates = [
+    cleanFirstName + cleanLastName, // johndoe
+    emailPrefix, // johndoe123
+    cleanFirstName + (cleanLastName ? cleanLastName[0] : ''), // johnd
+    (cleanFirstName ? cleanFirstName[0] : '') + cleanLastName, // jdoe
+  ].filter(Boolean); // Remove empty strings
+
+  for (const baseUsername of usernameCandidates) {
+    let attempt = 0;
+    let username = '';
+    let isUnique = false;
+
+    while (!isUnique && attempt < 1000) {
+      username = generateUsername(baseUsername, attempt);
+      // Check if username exists in database
+      const existingUser = await User.findOne({ username });
+      if (!existingUser) {
+        isUnique = true;
+        break;
+      }
+      attempt++;
+    }
+
+    if (isUnique) return username;
+  }
+
+  // Fallback: Use timestamp if all attempts fail
+  return `user${Date.now().toString().slice(-8)}`;
+}
 // CREATE
 export async function createUser(user: CreateUserParams) {
   try {
     await connectDB();
-
-    // Set default username if not provided
-    if (!user.username && user.email) {
-      user.username = user.email.split("@")[0]; // Extract username from email
-    }
-
-    const newUser = await User.create(user);
+    // Generate username if not provided
+    if (!user.username) {
+      user.username = await generateUniqueUsername(
+        user.firstName,
+        user.lastName,
+        user.email
+        );
+      }
+      const newUser = await User.create(user);
+      console.log({newUser});
     return JSON.parse(JSON.stringify(newUser));
   } catch (error) {
     handleError(error);
@@ -71,7 +123,6 @@ export async function updateUser(clerkId: string, user: UpdateUserParams) {
     const updatedUser = await User.findOneAndUpdate({ clerkId }, user, {
       new: true,
     });
-
     if (!updatedUser) throw new Error("User update failed");
 
     return JSON.parse(JSON.stringify(updatedUser));
@@ -84,7 +135,6 @@ export async function updateUser(clerkId: string, user: UpdateUserParams) {
 export async function deleteUser(clerkId: string) {
   try {
     await connectDB();
-
     // Find user to delete
     const userToDelete = await User.findOne({ clerkId });
 

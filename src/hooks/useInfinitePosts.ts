@@ -8,11 +8,13 @@ type PostsResponse = {
   hasMore: boolean;
 };
 
+
 type UseInfinitePostsParams = {
   userId?: string;
   filter?: "popular" | "downloads" | "recent";
   searchQuery?: string;
   limit?: number;
+  initialData?: PostsResponse;
 };
 
 export const useInfinitePosts = ({
@@ -20,10 +22,11 @@ export const useInfinitePosts = ({
   filter = "recent",
   searchQuery,
   limit = 9,
+  initialData,
 }: UseInfinitePostsParams) => {
   return useInfiniteQuery<PostsResponse>({
-    queryKey: ["posts", filter, searchQuery, userId],
-    queryFn: async ({ pageParam }) => {
+    queryKey: ["posts", { userId, filter, searchQuery }],
+    queryFn: async ({ pageParam = "" }) => {
       const response = await getAllPosts({
         cursor: pageParam as string | undefined,
         limit,
@@ -39,6 +42,10 @@ export const useInfinitePosts = ({
       return response.data;
     },
     getNextPageParam: (lastPage) => lastPage.nextCursor,
-    initialPageParam: null,
+    initialData: initialData ? {
+      pages: [initialData],
+      pageParams: [""]
+    } : undefined,
+    initialPageParam: "",
   });
 };

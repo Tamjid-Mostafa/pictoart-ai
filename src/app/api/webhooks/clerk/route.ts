@@ -58,7 +58,7 @@ export async function POST(req: Request) {
 
   // CREATE
   if (eventType === "user.created") {
-    // console.log("User created", evt.data);
+    console.log("User created", evt.data);
     const { id, email_addresses, image_url, first_name, last_name, username } =
       evt.data;
 
@@ -70,8 +70,8 @@ export async function POST(req: Request) {
       lastName: last_name || "",
       photo: image_url,
     };
-    // console.log({ user });
     const newUser = await createUser(user);
+    console.log({ newUser });
 
     // Set public metadata
     if (newUser) {
@@ -79,6 +79,7 @@ export async function POST(req: Request) {
       clerkClientData.users.updateUserMetadata(id, {
         publicMetadata: {
           userId: newUser._id,
+          username: newUser.username,
         },
       });
     }
@@ -111,8 +112,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: "OK", user: deletedUser });
   }
 
-  // console.log(`Webhook with and ID of ${id} and type of ${eventType}`);
-  // console.log("Webhook body:", body);
+  console.log(`Webhook with and ID of ${id} and type of ${eventType}`);
+  console.log("Webhook body:", body);
 
   return new Response("", { status: 200 });
 }

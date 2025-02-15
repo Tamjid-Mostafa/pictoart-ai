@@ -8,45 +8,72 @@ import PromptInput from "@/components/PromptInput";
 import { useImageGeneratorStore } from "../store/image-generator";
 import { CommunityPosts } from "./CommunityPosts";
 import Suggestions from "./SuggestionComponent";
-import { useUser } from "@clerk/nextjs";
 import { useScrollOnMobile } from "@/hooks/useScrollMobile";
 import { Loader2, Sparkles } from "lucide-react";
+import { useImageGenerationStore } from "@/store/imageGenerationStore";
+import { usePostStore } from "@/store/postStore";
+import { useUserStore } from "@/store/userStore";
+import { useClerk, useUser } from "@clerk/nextjs";
+import { s } from "motion/react-client";
 
-export default function ImageGenerator() {
+export default function ImageGenerator({
+  posts,
+}: {
+  posts: Post[] | undefined;
+}) {
+  // const {
+  //   setPrompt,
+  //   setPalette,
+  //   generateImage,
+  //   downloadImage,
+  //   shareImage,
+  //   prompt,
+  //   palette,
+  //   generatedImage,
+  //   isGenerating,
+  //   isSharing,
+  //   isImageShared, // Add this new selector
+  // } = useImageGeneratorStore();
   const {
-    setPrompt,
-    setPalette,
-    generateImage,
-    downloadImage,
-    shareImage,
-    fetchPosts,
     prompt,
     palette,
     generatedImage,
     isGenerating,
-    posts,
-    isSharing,
-    isImageShared, // Add this new selector
-  } = useImageGeneratorStore();
+    setPrompt,
+    setPalette,
+    generateImage,
+    downloadImage,
+  } = useImageGenerationStore();
+  const { isSharing, shareImage, sharedImages, setPosts, posts :data} = usePostStore();
+  const { openSignIn } = useClerk();
+  const { currentUser } = useUserStore();
 
-  const { user } = useUser();
+  useEffect(() => {
+    if (posts && posts?.length > 0) {
+      setPosts(posts);
+    }
+  }, []);
 
   const handleShare = async () => {
-    if (!user?.id) return;
-    await shareImage(user.id);
+    if (!currentUser?._id) {
+      openSignIn();
+      return;
+    }
+    await shareImage({
+      userId: currentUser?._id,
+      generatedImage,
+      prompt,
+      palette,
+    });
   };
+
   const handleGenerate = async () => {
-    console.log(user?.id);
-    if (!user?.id) return;
+    if (!currentUser?._id) {
+      openSignIn();
+    }
     await generateImage();
   };
-  useEffect(() => {
-    const { animatingPostId } = useImageGeneratorStore.getState();
-    if (animatingPostId) {
-      const element = document.getElementById(animatingPostId);
-      element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  }, [posts]);
+
   useEffect(() => {
     if ((isGenerating || generatedImage) && window.innerWidth < 1024) {
       const preview = document.getElementById("preview");
@@ -57,12 +84,13 @@ export default function ImageGenerator() {
     }
   }, [isGenerating, generatedImage]);
 
-  useEffect(() => {
-    fetchPosts();
-  }, [fetchPosts]);
+  // useEffect(() => {
+  //   fetchPosts();
+  // }, [fetchPosts]);
 
   // Check if current image has been shared
-  const isCurrentImageShared = generatedImage && isImageShared(generatedImage);
+  const isCurrentImageShared =
+    generatedImage && sharedImages.has(generatedImage);
 
   return (
     <div className="min-h-screen gradient-bg relative overflow-x-hidden">
@@ -101,7 +129,9 @@ export default function ImageGenerator() {
               </Button>
               <Button
                 onClick={handleShare}
-                disabled={!generatedImage || isSharing || !!isCurrentImageShared}
+                disabled={
+                  !generatedImage || isSharing || !!isCurrentImageShared
+                }
                 variant="outline"
                 className="w-full flex items-center justify-center gap-2 px-4 py-2 
              bg-gradient-to-r from-indigo-500 to-purple-500 
@@ -127,7 +157,7 @@ export default function ImageGenerator() {
                 )}
               </Button>
             </div>
-            <CommunityPosts posts={posts} />
+            <CommunityPosts posts={data} />
           </div>
         </div>
       </main>

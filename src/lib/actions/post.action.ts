@@ -310,6 +310,7 @@ export async function toggleLike(postId: string, userId: string): Promise<PostRe
 
     revalidatePath("/");
     revalidatePath("/gallery");
+    revalidatePath(`/start`);
     return {
       success: true,
       data: serializeData({

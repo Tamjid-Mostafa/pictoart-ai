@@ -1,13 +1,21 @@
-
 import { auth } from "@clerk/nextjs/server";
 import { getUserById } from "@/lib/actions/user.action";
 import Gallery from "@/components/Gallery";
 import { getAllPosts } from "@/lib/actions/post.action";
+import { Suspense } from "react";
 
-export default async function GalleryPage() {
+export default async function GalleryPage(props: {
+  searchParams: Promise<{
+    filter?: "popular" | "downloads" | "recent";
+    searchQuery?: string;
+    cursor?: string;
+  }>;
+}) {
+  const searchParams = await props.searchParams;
+  const { filter = "recent", searchQuery = ""} = searchParams;
   const { userId } = await auth();
-  let mongoUserId;
-  
+  let mongoUserId: string = "";
+
   try {
     if (userId) {
       const user = await getUserById(userId);
@@ -17,11 +25,22 @@ export default async function GalleryPage() {
     console.error("Error fetching user:", error);
   }
 
-  const {data} = await getAllPosts({
+  // Fetch posts using server action
+  const { data } = await getAllPosts({
     userId: mongoUserId,
-    filter: "recent",
-    limit: 10,
+    filter,
+    searchQuery,
+    limit: 9,
   });
 
-  return <Gallery userId={mongoUserId} data={data} />;
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <Gallery
+        userId={mongoUserId}
+        filter={filter}
+        searchQuery={searchQuery}
+        initialData={data}
+      />
+    </Suspense>
+  );
 }

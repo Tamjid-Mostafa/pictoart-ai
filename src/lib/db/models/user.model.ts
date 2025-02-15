@@ -14,12 +14,13 @@ interface IUser extends Document {
 const UserSchema = new mongoose.Schema({
   clerkId: { type: String, required: true, unique: true },
   email: { type: String, required: true, unique: true },
-  firstName: { type: String, required: true },
-  lastName: { type: String, required: true },
-  photo: { type: String, required: true },
+  firstName: { type: String },
+  lastName: { type: String },
+  photo: { type: String },
   username: {
     type: String,
     unique: true,
+    required: [true, "Username is required"],
   },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },

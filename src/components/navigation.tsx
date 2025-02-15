@@ -1,18 +1,21 @@
 "use client";
 
 import { ModeToggle } from "./mode-toggle";
-import * as motion from "motion/react-client";
+import {motion} from "motion/react";
 import { LogIn, Sparkles, Wand2 } from "lucide-react";
-import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { SignedIn, SignedOut, UserButton, useUser } from "@clerk/nextjs";
 import { Button } from "./ui/button";
 import { useClerk } from "@clerk/nextjs";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useUserQuery } from "@/hooks/useUser";
 
 export function Navigation() {
-  const { openSignIn } = useClerk();
+  const { openSignIn, user } = useClerk();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  // Use React Query to manage user data
+  const { data: userData } = useUserQuery(user?.id as string);
 
   useEffect(() => {
     // Check initial scroll position

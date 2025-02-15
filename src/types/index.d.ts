@@ -9,14 +9,24 @@ declare type CreateUserParams = {
   photo?: string;
   planId?: number;
   creditBalance?: number;
-  joinDate?: Date;
   membershipStatus?: "active" | "inactive" | "cancelled";
-  workoutPreferences?: string[];
-  nutritionGoals?: string;
   createdAt?: Date;
   updatedAt?: Date;
 };
-
+declare type User = {
+  _id: string;
+  clerkId: string;
+  email: string;
+  username: string;
+  firstName?: string;
+  lastName?: string;
+  photo?: string;
+  planId?: number;
+  creditBalance?: number;
+  membershipStatus?: "active" | "inactive" | "cancelled";
+  createdAt?: Date;
+  updatedAt?: Date;
+};
 declare type UpdateUserParams = {
   email?: string;
   username?: string;
@@ -45,3 +55,21 @@ declare type Post = {
   createdAt: string;
   updatedAt: string;
 }
+
+// ====== URL QUERY PARAMS
+declare type FormUrlQueryParams = {
+  searchParams: string;
+  key: string;
+  value: string | number | null;
+};
+
+declare type UrlQueryParams = {
+  params: string;
+  key: string;
+  value: string | null;
+};
+
+declare type RemoveUrlQueryParams = {
+  searchParams: string;
+  keysToRemove: string[];
+};
