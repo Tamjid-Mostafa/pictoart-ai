@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import { toast } from "@/hooks/use-toast";
-import { createPost, getAllPosts } from "@/lib/actions/post.action";
+import { createPost, getAllPosts, toggleLike } from "@/lib/actions/post.action";
 import { getUserById } from "@/lib/actions/user.action";
 import { downloadImage, generateImage } from "@/lib/utils";
 
@@ -30,11 +30,14 @@ export interface ImageGeneratorState {
   // Async actions
   generateImage: () => Promise<void>;
   downloadImage: () => Promise<void>;
+  downloadImageByURL: (url:string) => Promise<void>;
   shareImage: (userId: string) => Promise<void>;
   fetchPosts: () => Promise<void>;
   
   // New helper method
   isImageShared: (imageUrl: string) => boolean;
+
+  toggleLike: (postId: string, userId: string) => Promise<void>;
 }
 
 export const useImageGeneratorStore = create<ImageGeneratorState>()(
@@ -127,11 +130,11 @@ export const useImageGeneratorStore = create<ImageGeneratorState>()(
 
           const { url: cloudinaryUrl } = await uploadResponse.json();
 
-          const post = await createPost({
+          const {success,data,error,message} = await createPost({
             prompt,
             photo: cloudinaryUrl,
             palette,
-            userId: user._id,
+            user: user._id,
           });
 
           // Add the shared image to the Set
@@ -139,7 +142,7 @@ export const useImageGeneratorStore = create<ImageGeneratorState>()(
           updatedSharedImages.add(generatedImage);
           
           set({ 
-            animatingPostId: post._id,
+            animatingPostId: data?._id,
             sharedImages: updatedSharedImages
           });
           
@@ -164,8 +167,8 @@ export const useImageGeneratorStore = create<ImageGeneratorState>()(
       // Existing fetchPosts implementation
       fetchPosts: async () => {
         try {
-          const fetchedPosts = await getAllPosts();
-          set({ posts: fetchedPosts });
+          const {success,data,error,message} = await getAllPosts({ filter: "recent" });
+          set({ posts: data?.items || [] });
         } catch (error) {
           toast({
             title: "Error",
@@ -183,6 +186,40 @@ export const useImageGeneratorStore = create<ImageGeneratorState>()(
           fileName: `ai-generated-image-${Date.now()}`,
           format: "png",
         });
+      },
+      downloadImageByURL: async (url: string) => {
+        if (!url) return;
+        await downloadImage(url, {
+          fileName: `ai-generated-image-${Date.now()}`,
+          format: "png",
+        });
+      },
+      toggleLike: async (postId: string, userId: string) => {
+        const { posts } = get();
+        
+        // Update UI immediately
+        const updatedPosts = posts.map(post => {
+          if (post._id === postId) {
+            const isCurrentlyLiked = post.isLiked;
+            return {
+              ...post,
+              isLiked: !isCurrentlyLiked,
+              likes: isCurrentlyLiked ? post.likes - 1 : post.likes + 1
+            };
+          }
+          return post;
+        });
+        
+        set({ posts: updatedPosts });
+
+        // Make API call in background
+        try {
+          await toggleLike(postId, userId);
+        } catch (error) {
+          // Revert on error
+          set({ posts });
+          console.error(error);
+        }
       },
     }),
     { name: "image-generator-store" }

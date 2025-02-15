@@ -5,7 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import Preview from "@/components/Preview";
 import ColorPaletteSelector from "@/components/ColorPaletteSelector";
 import PromptInput from "@/components/PromptInput";
-import { useImageGeneratorStore } from "../../store/image-generator";
+import { useImageGeneratorStore } from "../store/image-generator";
 import { CommunityPosts } from "./CommunityPosts";
 import Suggestions from "./SuggestionComponent";
 import { useUser } from "@clerk/nextjs";
@@ -34,6 +34,11 @@ export default function ImageGenerator() {
   const handleShare = async () => {
     if (!user?.id) return;
     await shareImage(user.id);
+  };
+  const handleGenerate = async () => {
+    console.log(user?.id);
+    if (!user?.id) return;
+    await generateImage();
   };
   useEffect(() => {
     const { animatingPostId } = useImageGeneratorStore.getState();
@@ -69,7 +74,7 @@ export default function ImageGenerator() {
             <PromptInput
               prompt={prompt}
               onPromptChange={setPrompt}
-              onGenerate={generateImage}
+              onGenerate={handleGenerate}
               isGenerating={isGenerating}
             />
             <ScrollArea className="h-[500px]">

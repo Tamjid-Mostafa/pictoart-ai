@@ -9,11 +9,14 @@ import User from "../db/models/user.model";
 // CREATE
 export async function createUser(user: CreateUserParams) {
   try {
-    // console.log("Creating user...", (await connectDB()).connection.name);
     await connectDB();
 
+    // Set default username if not provided
+    if (!user.username && user.email) {
+      user.username = user.email.split("@")[0]; // Extract username from email
+    }
+
     const newUser = await User.create(user);
-    // console.log("Created USer:", JSON.parse(JSON.stringify(newUser)));
     return JSON.parse(JSON.stringify(newUser));
   } catch (error) {
     handleError(error);

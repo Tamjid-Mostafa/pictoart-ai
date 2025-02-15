@@ -104,7 +104,7 @@
   }
 
   .glass-effect {
-    @apply bg-white/80 dark:bg-gray-950/80 backdrop-blur-md;
+    @apply bg-white/60 dark:bg-gray-950/60 backdrop-blur-md;
   }
 
   .blob {
