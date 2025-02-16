@@ -2,7 +2,10 @@ import { auth } from "@clerk/nextjs/server";
 import { getUserById } from "@/lib/actions/user.action";
 import Gallery from "@/components/Gallery";
 import { getAllPosts } from "@/lib/actions/post.action";
+import { BackgroundBlobs } from "@/components/BackgroundBlobs";
+import GalleryHero from "@/components/GalleryHero";
 import { Suspense } from "react";
+import { GalleryFallback } from "@/components/GalleryFallback";
 
 export default async function GalleryPage(props: {
   searchParams: Promise<{
@@ -12,7 +15,7 @@ export default async function GalleryPage(props: {
   }>;
 }) {
   const searchParams = await props.searchParams;
-  const { filter = "recent", searchQuery = ""} = searchParams;
+  const { filter = "recent", searchQuery = "" } = searchParams;
   const { userId } = await auth();
   let mongoUserId: string = "";
 
@@ -34,13 +37,20 @@ export default async function GalleryPage(props: {
   });
 
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <Gallery
-        userId={mongoUserId}
-        filter={filter}
-        searchQuery={searchQuery}
-        initialData={data}
-      />
-    </Suspense>
+    <div className="min-h-svh">
+      <BackgroundBlobs />
+      <GalleryHero />
+      <main className="container mx-auto px-4 sm:px-6 py-8">
+        <Suspense fallback={<GalleryFallback variant="variant4"/>}>
+          <Gallery
+            userId={mongoUserId}
+            filter={filter}
+            searchQuery={searchQuery}
+            initialData={data}
+            variant="variant4"
+          />
+        </Suspense>
+      </main>
+    </div>
   );
 }

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { handleError } from "../utils";
 import { connectDB } from "../db/connect";
 import Post from "../db/models/post.model";
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 // Types
 type CreatePostParams = {
@@ -16,7 +16,7 @@ type CreatePostParams = {
 
 type GetAllPostsParams = {
   searchQuery?: string;
-  filter?: 'popular' | 'downloads' | 'recent';
+  filter?: "popular" | "downloads" | "recent";
   style?: string;
   userId?: string;
   cursor?: string;
@@ -41,7 +41,6 @@ type CursorPaginatedResponse<T> = BaseResponse<{
   hasMore: boolean;
 }>;
 
-
 type PostResponse = BaseResponse<Post>;
 type PostsResponse = CursorPaginatedResponse<Post>;
 type StatsResponse = BaseResponse<{
@@ -55,10 +54,11 @@ const serializeData = <T>(data: T): T => {
 };
 
 // Actions
-export async function createPost(post: CreatePostParams): Promise<PostResponse> {
+export async function createPost(
+  post: CreatePostParams
+): Promise<PostResponse> {
   try {
     await connectDB();
-console.log(post);
     const newPost = await Post.create({
       ...post,
       // likes: Math.floor(Math.random() * 1000),
@@ -67,6 +67,8 @@ console.log(post);
     });
 
     revalidatePath("/");
+    revalidatePath("/gallery");
+    revalidatePath(`/start`);
     return {
       success: true,
       data: serializeData(newPost),
@@ -76,15 +78,17 @@ console.log(post);
   }
 }
 
-export async function getAllPosts(params: GetAllPostsParams): Promise<PostsResponse> {
+export async function getAllPosts(
+  params: GetAllPostsParams
+): Promise<PostsResponse> {
   try {
     await connectDB();
 
     const limit = params.limit || 9;
     const query: mongoose.FilterQuery<typeof Post> = {};
-    
+
     if (params.searchQuery) {
-      query.prompt = { $regex: params.searchQuery, $options: 'i' };
+      query.prompt = { $regex: params.searchQuery, $options: "i" };
     }
 
     if (params.style) {
@@ -92,19 +96,21 @@ export async function getAllPosts(params: GetAllPostsParams): Promise<PostsRespo
     }
 
     // Define sort field based on filter
-    let sortField = 'createdAt';
+    let sortField = "createdAt";
     switch (params.filter) {
-      case 'popular':
-        sortField = 'likes';
+      case "popular":
+        sortField = "likes";
         break;
-      case 'downloads':
-        sortField = 'downloads';
+      case "downloads":
+        sortField = "downloads";
         break;
     }
 
     // Add cursor to query if provided
     if (params.cursor) {
-      const skipCount = parseInt(Buffer.from(params.cursor, 'base64').toString());
+      const skipCount = parseInt(
+        Buffer.from(params.cursor, "base64").toString()
+      );
       const posts = await Post.aggregate([
         { $match: query },
         { $sort: { [sortField]: -1, _id: -1 } },
@@ -115,14 +121,14 @@ export async function getAllPosts(params: GetAllPostsParams): Promise<PostsRespo
             localField: "userId",
             foreignField: "_id",
             pipeline: [{ $project: { username: 1, _id: 0 } }],
-            as: "user"
-          }
+            as: "user",
+          },
         },
         {
           $unwind: {
             path: "$user",
-            preserveNullAndEmptyArrays: true
-          }
+            preserveNullAndEmptyArrays: true,
+          },
         },
         {
           $addFields: {
@@ -132,15 +138,17 @@ export async function getAllPosts(params: GetAllPostsParams): Promise<PostsRespo
                 then: false,
                 else: {
                   $in: [
-                    params.userId ? new mongoose.Types.ObjectId(params.userId) : null,
-                    { $ifNull: ["$likedBy", []] }
-                  ]
-                }
-              }
-            }
-          }
+                    params.userId
+                      ? new mongoose.Types.ObjectId(params.userId)
+                      : null,
+                    { $ifNull: ["$likedBy", []] },
+                  ],
+                },
+              },
+            },
+          },
         },
-        { $limit: limit + 1 } // Get one extra to check if there are more items
+        { $limit: limit + 1 }, // Get one extra to check if there are more items
       ]);
 
       // Check if there are more items
@@ -150,7 +158,9 @@ export async function getAllPosts(params: GetAllPostsParams): Promise<PostsRespo
       // Create the next cursor
       let nextCursor = null;
       if (hasMore) {
-        nextCursor = Buffer.from((skipCount + limit).toString()).toString('base64');
+        nextCursor = Buffer.from((skipCount + limit).toString()).toString(
+          "base64"
+        );
       }
 
       return {
@@ -158,8 +168,8 @@ export async function getAllPosts(params: GetAllPostsParams): Promise<PostsRespo
         data: {
           items: serializeData(items),
           nextCursor,
-          hasMore
-        }
+          hasMore,
+        },
       };
     }
 
@@ -173,14 +183,14 @@ export async function getAllPosts(params: GetAllPostsParams): Promise<PostsRespo
           localField: "user",
           foreignField: "_id",
           pipeline: [{ $project: { username: 1, _id: 0 } }],
-          as: "user"
-        }
+          as: "user",
+        },
       },
       {
         $unwind: {
           path: "$user",
-          preserveNullAndEmptyArrays: true
-        }
+          preserveNullAndEmptyArrays: true,
+        },
       },
       {
         $addFields: {
@@ -190,15 +200,17 @@ export async function getAllPosts(params: GetAllPostsParams): Promise<PostsRespo
               then: false,
               else: {
                 $in: [
-                  params.userId ? new mongoose.Types.ObjectId(params.userId) : null,
-                  { $ifNull: ["$likedBy", []] }
-                ]
-              }
-            }
-          }
-        }
+                  params.userId
+                    ? new mongoose.Types.ObjectId(params.userId)
+                    : null,
+                  { $ifNull: ["$likedBy", []] },
+                ],
+              },
+            },
+          },
+        },
       },
-      { $limit: limit + 1 } // Get one extra to check if there are more items
+      { $limit: limit + 1 }, // Get one extra to check if there are more items
     ]);
 
     // Check if there are more items
@@ -208,23 +220,25 @@ export async function getAllPosts(params: GetAllPostsParams): Promise<PostsRespo
     // Create the first cursor
     let nextCursor = null;
     if (hasMore) {
-      nextCursor = Buffer.from(limit.toString()).toString('base64');
+      nextCursor = Buffer.from(limit.toString()).toString("base64");
     }
     return {
       success: true,
       data: {
         items: serializeData(items),
         nextCursor,
-        hasMore
-      }
+        hasMore,
+      },
     };
   } catch (error) {
     return handleError(error);
   }
 }
 
-
-export async function getPostById(postId: string, userId?: string): Promise<PostResponse> {
+export async function getPostById(
+  postId: string,
+  userId?: string
+): Promise<PostResponse> {
   try {
     await connectDB();
 
@@ -236,14 +250,14 @@ export async function getPostById(postId: string, userId?: string): Promise<Post
           localField: "userId",
           foreignField: "_id",
           pipeline: [{ $project: { username: 1, _id: 0 } }],
-          as: "user"
-        }
+          as: "user",
+        },
       },
       {
         $unwind: {
           path: "$user",
-          preserveNullAndEmptyArrays: true
-        }
+          preserveNullAndEmptyArrays: true,
+        },
       },
       {
         $addFields: {
@@ -254,32 +268,35 @@ export async function getPostById(postId: string, userId?: string): Promise<Post
               else: {
                 $in: [
                   new mongoose.Types.ObjectId(userId),
-                  { $ifNull: ["$likedBy", []] }
-                ]
-              }
-            }
-          }
-        }
-      }
-    ]).then(results => results[0]);
+                  { $ifNull: ["$likedBy", []] },
+                ],
+              },
+            },
+          },
+        },
+      },
+    ]).then((results) => results[0]);
 
     if (!post) {
       return {
         success: false,
-        message: "Post not found"
+        message: "Post not found",
       };
     }
 
     return {
       success: true,
-      data: serializeData(post)
+      data: serializeData(post),
     };
   } catch (error) {
     return handleError(error);
   }
 }
 
-export async function toggleLike(postId: string, userId: string): Promise<PostResponse> {
+export async function toggleLike(
+  postId: string,
+  userId: string
+): Promise<PostResponse> {
   try {
     await connectDB();
 
@@ -287,7 +304,7 @@ export async function toggleLike(postId: string, userId: string): Promise<PostRe
     if (!post) {
       return {
         success: false,
-        message: "Post not found"
+        message: "Post not found",
       };
     }
 
@@ -299,11 +316,11 @@ export async function toggleLike(postId: string, userId: string): Promise<PostRe
       isLiked
         ? {
             $pull: { likedBy: userObjectId },
-            $inc: { likes: -1 }
+            $inc: { likes: -1 },
           }
         : {
             $addToSet: { likedBy: userObjectId },
-            $inc: { likes: 1 }
+            $inc: { likes: 1 },
           },
       { new: true }
     );
@@ -315,8 +332,8 @@ export async function toggleLike(postId: string, userId: string): Promise<PostRe
       success: true,
       data: serializeData({
         ...updatedPost?.toObject(),
-        isLiked: !isLiked
-      })
+        isLiked: !isLiked,
+      }),
     };
   } catch (error) {
     return handleError(error);
@@ -336,41 +353,42 @@ export async function downloadPost(postId: string): Promise<PostResponse> {
     if (!updatedPost) {
       return {
         success: false,
-        message: "Post not found"
+        message: "Post not found",
       };
     }
 
     revalidatePath("/");
     return {
       success: true,
-      data: serializeData(updatedPost)
+      data: serializeData(updatedPost),
     };
   } catch (error) {
     return handleError(error);
   }
 }
 
-export async function updatePost(postId: string, update: UpdatePostParams): Promise<PostResponse> {
+export async function updatePost(
+  postId: string,
+  update: UpdatePostParams
+): Promise<PostResponse> {
   try {
     await connectDB();
 
-    const updatedPost = await Post.findByIdAndUpdate(
-      postId,
-      update,
-      { new: true }
-    );
+    const updatedPost = await Post.findByIdAndUpdate(postId, update, {
+      new: true,
+    });
 
     if (!updatedPost) {
       return {
         success: false,
-        message: "Post update failed"
+        message: "Post update failed",
       };
     }
 
     revalidatePath("/");
     return {
       success: true,
-      data: serializeData(updatedPost)
+      data: serializeData(updatedPost),
     };
   } catch (error) {
     return handleError(error);
@@ -386,14 +404,14 @@ export async function deletePost(postId: string): Promise<PostResponse> {
     if (!deletedPost) {
       return {
         success: false,
-        message: "Post not found"
+        message: "Post not found",
       };
     }
 
     revalidatePath("/");
     return {
       success: true,
-      data: serializeData(deletedPost)
+      data: serializeData(deletedPost),
     };
   } catch (error) {
     return handleError(error);
@@ -405,15 +423,15 @@ export async function updateAllPostsWithRandomStats(): Promise<StatsResponse> {
     await connectDB();
 
     const posts = await Post.find({});
-    
-    const updatePromises = posts.map(post => {
+
+    const updatePromises = posts.map((post) => {
       return Post.findByIdAndUpdate(
         post._id,
         {
           $set: {
             likes: Math.floor(Math.random() * 1000),
-            downloads: Math.floor(Math.random() * 500)
-          }
+            downloads: Math.floor(Math.random() * 500),
+          },
         },
         { new: true }
       );
@@ -427,8 +445,8 @@ export async function updateAllPostsWithRandomStats(): Promise<StatsResponse> {
       message: `Updated ${updatedPosts.length} posts with random stats`,
       data: {
         updatedCount: updatedPosts.length,
-        posts: serializeData(updatedPosts)
-      }
+        posts: serializeData(updatedPosts),
+      },
     };
   } catch (error) {
     return handleError(error);

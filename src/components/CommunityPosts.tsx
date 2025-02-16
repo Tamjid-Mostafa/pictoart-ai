@@ -16,7 +16,7 @@ export const CommunityPosts = ({
   posts,
   variant = "default",
   isScrollable = true,
-  scrollHeight = "h-[600px]",
+  scrollHeight = "h-[calc(100vh-20rem)]",
   title = "Community Creations",
 }: CommunityPostsProps) => {
   const getVariantStyles = () => {
@@ -24,7 +24,7 @@ export const CommunityPosts = ({
       case "variant3":
         return "grid grid-cols-1 md:grid-cols-3 gap-6";
       case "variant4":
-        return "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4";
+        return "grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4";
       default:
         return "grid gap-4";
     }
@@ -37,7 +37,6 @@ export const CommunityPosts = ({
           <CommunityPost
             key={post._id}
             post={post}
-            // variant={variant}
           />
         ))
       ) : (
@@ -57,7 +56,9 @@ export const CommunityPosts = ({
     <div className="space-y-4">
       {title && <h3 className="font-semibold text-lg">{title}</h3>}
       {isScrollable ? (
-        <ScrollArea className={scrollHeight}>
+        <ScrollArea style={{
+          height: `${scrollHeight}px`
+        }} className={scrollHeight}>
           <Content />
         </ScrollArea>
       ) : (

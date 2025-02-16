@@ -15,7 +15,7 @@ export default function Preview({
 }: PreviewProps) {
   return (
     <motion.div id="preview" layout className="lg:col-span-2">
-      <Card className="glass-effect border-white/20 p-6 h-full min-h-[calc(100vh-10rem)] flex flex-col items-center justify-center relative overflow-hidden">
+      <Card className="glass-effect border-white/20 p-6 aspect-square flex flex-col items-center justify-center relative overflow-hidden">
         {isGenerating ? (
           <div className="text-center space-y-4 relative z-10">
             <div className="animate-spin">

@@ -15,6 +15,7 @@ import { usePostStore } from "@/store/postStore";
 import { useUserStore } from "@/store/userStore";
 import { useClerk, useUser } from "@clerk/nextjs";
 import { s } from "motion/react-client";
+import Link from "next/link";
 
 export default function ImageGenerator({
   posts,
@@ -44,7 +45,13 @@ export default function ImageGenerator({
     generateImage,
     downloadImage,
   } = useImageGenerationStore();
-  const { isSharing, shareImage, sharedImages, setPosts, posts :data} = usePostStore();
+  const {
+    isSharing,
+    shareImage,
+    sharedImages,
+    setPosts,
+    posts: data,
+  } = usePostStore();
   const { openSignIn } = useClerk();
   const { currentUser } = useUserStore();
 
@@ -52,7 +59,7 @@ export default function ImageGenerator({
     if (posts && posts?.length > 0) {
       setPosts(posts);
     }
-  }, []);
+  }, [data, posts]);
 
   const handleShare = async () => {
     if (!currentUser?._id) {
@@ -83,10 +90,6 @@ export default function ImageGenerator({
       });
     }
   }, [isGenerating, generatedImage]);
-
-  // useEffect(() => {
-  //   fetchPosts();
-  // }, [fetchPosts]);
 
   // Check if current image has been shared
   const isCurrentImageShared =
@@ -158,6 +161,18 @@ export default function ImageGenerator({
               </Button>
             </div>
             <CommunityPosts posts={data} />
+            <Link href="/gallery" className="block">
+              <Button
+                variant="outline"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 
+             bg-gradient-to-r from-indigo-500 to-purple-500 
+             text-white font-semibold rounded-lg shadow-md 
+             transition-all duration-300 
+             disabled:opacity-50 disabled:cursor-not-allowed group"
+              >
+                View More
+              </Button>
+            </Link>
           </div>
         </div>
       </main>

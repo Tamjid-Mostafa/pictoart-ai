@@ -18,12 +18,10 @@ import { useSearchParams } from "next/navigation";
 
 interface CommunityPostProps {
   post: Post;
-  variant?: "default" | "variant3" | "variant4";
 }
 
 export const CommunityPost = ({
   post,
-  variant = "default",
 }: CommunityPostProps) => {
   const { downloadImageByURL, setPrompt, setPalette } =
     useImageGenerationStore();
@@ -33,12 +31,6 @@ export const CommunityPost = ({
   const isAnimating = post._id === animatingPostId;
   const isMobile = useIsMobile();
   const { openSignIn, user } = useClerk();
-  const searchParams = useSearchParams();
-  const filter = searchParams.get("filter") as
-    | "popular"
-    | "downloads"
-    | "recent";
-  const searchQuery = searchParams.get("searchQuery") || "";
   // Create unique animation keys for each post
   const animationKeys = useMemo(
     () => ({
@@ -103,26 +95,16 @@ export const CommunityPost = ({
     }),
     [isMobile, animationKeys]
   );
-  const { isFetching } = queryClient;
   // Event handlers remain the same
   const handleLike = useCallback(async () => {
     try {
       if (!user?.publicMetadata.userId) {
         openSignIn();
       }
-      console.log("console", [
-        "posts",
-        {
-          userId: user?.publicMetadata.userId,
-          filter: filter || "recent",
-          searchQuery,
-        },
-      ]);
       const response = await toggleLike(
         post._id,
         user?.publicMetadata.userId as string
       );
-      console.log(response);
       if (response.success) {
         // Refetch all active queries that begin with `posts` in the key
         await queryClient.refetchQueries({
@@ -137,21 +119,13 @@ export const CommunityPost = ({
 
   const handleDownload = useCallback(async () => {
     try {
-      if (!user) {
-        openSignIn();
-        return;
-      }
-
       await downloadImageByURL(post._id);
       const response = await downloadPost(post._id);
 
       if (response.success) {
         // Refetch all active queries that begin with `posts` in the key
         await queryClient.refetchQueries({
-          queryKey: [
-            "posts",
-            { userId: user?.publicMetadata.userId, filter, searchQuery },
-          ],
+          queryKey: ["posts"],
           type: "active",
         });
       }
@@ -200,9 +174,8 @@ export const CommunityPost = ({
     () =>
       cn(
         "group relative overflow-hidden rounded-xl shadow-md transition-shadow hover:shadow-xl",
-        variant === "variant4" && "max-w-sm mx-auto"
       ),
-    [variant]
+    []
   );
 
   return (
