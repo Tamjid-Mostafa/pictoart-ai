@@ -30,7 +30,7 @@ const testimonials = [
     role: "UI/UX Designer",
     image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400",
     quote:
-      "PictoArt AI has become my go-to tool for creating unique vector illustrations. The credit system is so flexible!",
+      "PictoArt AI has become my go-to tool for creating unique vector illustrations. Credit system is so flexible!",
   },
   {
     name: "Michael Rodriguez",
@@ -218,7 +218,7 @@ export default async function Home() {
                       alt={testimonial.name}
                       width={48}
                       height={48}
-                      className="rounded-full"
+                      className="rounded-full w-[48px] h-[48px] object-cover object-top"
                     />
                     <div>
                       <h4 className="font-semibold">{testimonial.name}</h4>
@@ -244,7 +244,7 @@ export default async function Home() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-20 bg-gradient-to-r from-blue-600/20 to-purple-600/20">
+      <section className="py-20 bg-gradient-to-r from-blue-600/10 to-purple-600/10">
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
