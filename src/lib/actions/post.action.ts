@@ -325,9 +325,9 @@ export async function toggleLike(
       { new: true }
     );
 
-    revalidatePath("/");
-    revalidatePath("/gallery");
-    revalidatePath(`/start`);
+    revalidatePath("/", "layout");
+    revalidatePath("/gallery", "page");
+    revalidatePath("/start", "page");
     return {
       success: true,
       data: serializeData({
