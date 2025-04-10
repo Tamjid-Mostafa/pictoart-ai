@@ -408,7 +408,8 @@ export async function deletePost(postId: string): Promise<PostResponse> {
       };
     }
 
-    revalidatePath("/");
+    revalidatePath("/", "layout");
+    revalidatePath("/gallery", "page");
     return {
       success: true,
       data: serializeData(deletedPost),

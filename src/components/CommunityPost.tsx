@@ -3,10 +3,10 @@
 import Image from "next/image";
 import { Card } from "./ui/card";
 import { motion, Variants } from "motion/react";
-import { Download, Heart, Sparkles, Share2 } from "lucide-react";
+import { Download, Heart, Sparkles, Share2, Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
-import { useState, useMemo, useCallback, useRef } from "react";
-import { cn } from "@/lib/utils";
+import { useState, useMemo, useCallback, useRef, useTransition } from "react";
+import { cn, extractPublicId } from "@/lib/utils";
 import { downloadPost, toggleLike } from "@/lib/actions/post.action";
 import { useClerk } from "@clerk/nextjs";
 import { useQueryClient } from "@tanstack/react-query";
@@ -14,23 +14,35 @@ import { toast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useImageGenerationStore } from "@/store/imageGenerationStore";
 import { usePostStore } from "@/store/postStore";
-import { useSearchParams } from "next/navigation";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+  AlertDialogTitle,
+  AlertDialogDescription,
+} from "@/components/ui/alert-dialog";
+import { Trash2 } from "lucide-react";
 
 interface CommunityPostProps {
   post: Post;
 }
 
-export const CommunityPost = ({
-  post,
-}: CommunityPostProps) => {
+export const CommunityPost = ({ post }: CommunityPostProps) => {
   const { downloadImageByURL, setPrompt, setPalette } =
     useImageGenerationStore();
-  const { animatingPostId } = usePostStore();
+  const { animatingPostId, deletePost } = usePostStore();
   const queryClient = useQueryClient();
   const [isHovered, setIsHovered] = useState(false);
   const isAnimating = post._id === animatingPostId;
   const isMobile = useIsMobile();
   const { openSignIn, user } = useClerk();
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isPending, startTransition] = useTransition();
+
   // Create unique animation keys for each post
   const animationKeys = useMemo(
     () => ({
@@ -173,11 +185,11 @@ export const CommunityPost = ({
   const cardClassName = useMemo(
     () =>
       cn(
-        "group relative overflow-hidden rounded-xl shadow-md transition-shadow hover:shadow-xl",
+        "group relative overflow-hidden rounded-xl shadow-md transition-shadow hover:shadow-xl"
       ),
     []
   );
-
+  console.log(post.photo);
   return (
     <Card className={cardClassName}>
       <motion.div
@@ -208,7 +220,7 @@ export const CommunityPost = ({
             </motion.div>
 
             <div className="absolute top-2 right-2 flex gap-2 z-10">
-              {["download", "like", "share"].map((action, index) => (
+              {["download", "like", "share", "delete"].map((action, index) => (
                 <motion.div
                   key={`${animations.buttons.key}-${action}`}
                   variants={animations.buttons.variants}
@@ -216,35 +228,88 @@ export const CommunityPost = ({
                     shouldAnimate ? (isHovered ? "hover" : "rest") : undefined
                   }
                 >
-                  <Button
-                    size="icon"
-                    onClick={
-                      action === "download"
-                        ? handleDownload
-                        : action === "like"
-                        ? handleLike
-                        : handleShare
-                    }
-                    variant="secondary"
-                    className="bg-white/90 backdrop-blur-sm hover:bg-white"
-                  >
-                    {action === "download" && (
-                      <Download className="h-4 w-4 text-gray-700" />
-                    )}
-                    {action === "like" && (
-                      <Heart
-                        className={cn(
-                          "h-4 w-4",
-                          post.isLiked
-                            ? "fill-red-500 text-red-500"
-                            : "text-gray-700"
-                        )}
-                      />
-                    )}
-                    {action === "share" && (
-                      <Share2 className="h-4 w-4 text-gray-700" />
-                    )}
-                  </Button>
+                  {action === "delete" ? (
+                    <AlertDialog
+                      open={showDeleteDialog}
+                      onOpenChange={() => setShowDeleteDialog(true)}
+                    >
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          size="icon"
+                          variant="secondary"
+                          className="bg-white/90 backdrop-blur-sm hover:bg-white"
+                        >
+                          <Trash2 className="h-4 w-4 text-gray-700" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete this post?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. It will permanently
+                            remove your post and its image from Cloudinary.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            disabled={isPending}
+                            className="bg-red-500 hover:bg-red-600 text-white"
+                            onClick={() =>
+                              startTransition(async () => {
+                                await deletePost(
+                                  post._id,
+                                  extractPublicId(post.photo)
+                                );
+                                await queryClient.refetchQueries({
+                                  queryKey: ["posts"],
+                                  type: "active",
+                                });
+
+                                // Now close the dialog
+                                setShowDeleteDialog(false);
+                              })
+                            }
+                          >
+                            {isPending ? "Deleting..." : "Delete"}{" "}
+                            {isPending && (
+                              <Loader2 className="h-4 w-4 animate-spin text-muted" />
+                            )}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  ) : (
+                    <Button
+                      size="icon"
+                      onClick={
+                        action === "download"
+                          ? handleDownload
+                          : action === "like"
+                          ? handleLike
+                          : handleShare
+                      }
+                      variant="secondary"
+                      className="bg-white/90 backdrop-blur-sm hover:bg-white"
+                    >
+                      {action === "download" && (
+                        <Download className="h-4 w-4 text-gray-700" />
+                      )}
+                      {action === "like" && (
+                        <Heart
+                          className={cn(
+                            "h-4 w-4",
+                            post.isLiked
+                              ? "fill-red-500 text-red-500"
+                              : "text-gray-700"
+                          )}
+                        />
+                      )}
+                      {action === "share" && (
+                        <Share2 className="h-4 w-4 text-gray-700" />
+                      )}
+                    </Button>
+                  )}
                 </motion.div>
               ))}
             </div>

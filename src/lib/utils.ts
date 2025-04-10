@@ -142,3 +142,20 @@ export function removeKeysFromQuery({
 
   return `${window.location.pathname}?${qs.stringify(currentUrl)}`;
 }
+
+
+export function extractPublicId(url: string) {
+  // Step 1: Get everything after /upload/
+  const parts = url.split("/upload/")[1];
+
+  // Step 2: Split by `/` and remove the version (starts with 'v' + numbers)
+  const segments = parts.split("/");
+  const filtered = segments.filter(segment => !/^v\d+$/.test(segment));
+
+  // Step 3: Remove the file extension from the last part
+  const last = filtered.pop();
+  const cleanLast = last?.split(".")[0];
+
+  // Step 4: Return final path
+  return [...filtered, cleanLast].join("/");
+}

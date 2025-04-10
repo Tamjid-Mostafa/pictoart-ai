@@ -1,7 +1,13 @@
 // postStore.ts
 import { create } from "zustand";
-import { getAllPosts, createPost, toggleLike } from "@/lib/actions/post.action";
+import {
+  getAllPosts,
+  createPost,
+  toggleLike,
+  deletePost as deletePostFromDB,
+} from "@/lib/actions/post.action";
 import { toast } from "@/hooks/use-toast";
+import { deleteImageFromCloudinary } from "@/lib/delete-from-cloudinary";
 
 interface PostState {
   posts: Post[];
@@ -10,13 +16,14 @@ interface PostState {
   animatingPostId: string | null;
   setPosts: (posts: Post[]) => void;
   fetchPosts: () => Promise<void>;
-  shareImage: (imageData: { 
-    userId: string, 
-    generatedImage: string, 
-    prompt: string, 
-    palette: string 
+  shareImage: (imageData: {
+    userId: string;
+    generatedImage: string;
+    prompt: string;
+    palette: string;
   }) => Promise<void>;
   toggleLike: (postId: string, userId: string) => Promise<void>;
+  deletePost: (postId: string, publicId: string) => Promise<void>;
 }
 
 export const usePostStore = create<PostState>()((set, get) => ({
@@ -24,9 +31,9 @@ export const usePostStore = create<PostState>()((set, get) => ({
   isSharing: false,
   sharedImages: new Set<string>(),
   animatingPostId: null,
-  
+
   setPosts: (posts) => set({ posts }),
-  
+
   fetchPosts: async () => {
     try {
       const { data } = await getAllPosts({ filter: "recent" });
@@ -42,7 +49,7 @@ export const usePostStore = create<PostState>()((set, get) => ({
 
   shareImage: async ({ userId, generatedImage, prompt, palette }) => {
     const { sharedImages } = get();
-    
+
     if (sharedImages.has(generatedImage)) {
       toast({
         title: "Already Shared",
@@ -61,7 +68,7 @@ export const usePostStore = create<PostState>()((set, get) => ({
       });
 
       if (!uploadResponse.ok) throw new Error("Failed to upload image");
-      
+
       const { url: cloudinaryUrl } = await uploadResponse.json();
       const { data } = await createPost({
         prompt,
@@ -72,10 +79,10 @@ export const usePostStore = create<PostState>()((set, get) => ({
 
       const updatedSharedImages = new Set(sharedImages);
       updatedSharedImages.add(generatedImage);
-      
-      set({ 
+
+      set({
         animatingPostId: data?._id,
-        sharedImages: updatedSharedImages
+        sharedImages: updatedSharedImages,
       });
       set({ posts: [data as Post, ...get().posts] });
       toast({
@@ -95,19 +102,19 @@ export const usePostStore = create<PostState>()((set, get) => ({
 
   toggleLike: async (postId: string, userId: string) => {
     const { posts } = get();
-    
-    const updatedPosts = posts.map(post => {
+
+    const updatedPosts = posts.map((post) => {
       if (post._id === postId) {
         const isCurrentlyLiked = post.isLiked;
         return {
           ...post,
           isLiked: !isCurrentlyLiked,
-          likes: isCurrentlyLiked ? post.likes - 1 : post.likes + 1
+          likes: isCurrentlyLiked ? post.likes - 1 : post.likes + 1,
         };
       }
       return post;
     });
-    
+
     set({ posts: updatedPosts });
 
     try {
@@ -115,6 +122,47 @@ export const usePostStore = create<PostState>()((set, get) => ({
     } catch (error) {
       set({ posts }); // Revert on error
       console.error(error);
+    }
+  },
+  deletePost: async (postId, publicId) => {
+    try {
+      // 1. Delete from DB
+      const deleteResponse = await deletePostFromDB(postId);
+      if (!deleteResponse.success) {
+        toast({
+          title: "Error",
+          description: "Failed to delete post",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // 2. Delete from Cloudinary
+      const result = await deleteImageFromCloudinary(publicId);
+      if (!result.success) {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to delete image",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // 3. Update local state
+      const updatedPosts = get().posts.filter((post) => post._id !== postId);
+      set({ posts: updatedPosts });
+
+      toast({
+        title: "Deleted",
+        description: "Post successfully removed from community.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete the post.",
+        variant: "destructive",
+      });
+      console.error("Delete post error:", error);
     }
   },
 }));

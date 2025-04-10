@@ -14,7 +14,7 @@ export async function POST(request: Request) {
 
     // Upload image to Cloudinary
     const response = await cloudinary.uploader.upload(image, {
-      folder: 'pictoart-ai', // Optional: specify folder in Cloudinary
+      folder: 'pictoart-ai',
     });
 
     return NextResponse.json({
