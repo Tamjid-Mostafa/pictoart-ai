@@ -1,36 +1,83 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🎨 PictoArt AI
 
-## Getting Started
+**Turn text prompts into beautiful vector-style illustrations — instantly.**  
+Built with OpenAI's DALL·E 3, PictoArt AI is a modern web app that generates, stores, and showcases high-quality vector artwork, letting users create and share stunning visuals in seconds.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## ✨ Features
+
+- 🧠 Prompt-to-vector generation using OpenAI DALL·E 3
+- 🎨 Color palette selection before generation
+- 🖼 Public gallery of community creations
+- 🔗 Shareable images with instant download support
+- 👤 Auth via Clerk (email, OAuth)
+- ⚡ Fast, responsive UI with animations and dark mode
+
+---
+
+## 🛠 Tech Stack
+
+- **Framework**: Next.js 15 (App Router + Server Actions)
+- **Frontend**: React 19, TailwindCSS, Framer Motion, Radix UI, ShadCN
+- **AI Integration**: OpenAI (DALL·E 3)
+- **Storage & CDN**: Cloudinary
+- **Auth**: Clerk
+- **State Management**: Zustand
+- **Other**: Upstash Rate Limit, Stripe-ready structure, Nodemailer
+
+---
+
+## 🗂 Folder Structure
+
+```
+src/
+├── app/
+│   ├── (auth)/            # Sign-in / Sign-up routes
+│   ├── (root)/            # Public routes (start, gallery)
+│   ├── api/               # API routes for generate/upload
+│   └── webhooks/clerk/    # Clerk webhook listener
+├── components/            # UI Components
+├── lib/                   # OpenAI, Cloudinary, DB utils
+├── styles/                # Global CSS / Themes
+├── layout.tsx            # Root layout
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🚀 Run Locally
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+git clone https://github.com/tamjid-mostafa/pictoart-ai
+cd pictoart-ai
+pnpm install
+pnpm dev
+```
 
-## Learn More
+Make sure to add these `.env` values:
 
-To learn more about Next.js, take a look at the following resources:
+```env
+OPENAI_API_KEY=
+CLOUDINARY_API_KEY=
+CLERK_SECRET_KEY=
+DATABASE_URL=
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🌍 Live Site
 
-## Deploy on Vercel
+[https://pictoart-ai.vercel.app](https://pictoart-ai.vercel.app) *(replace with your domain if different)*
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📬 Contact
+
+- Portfolio: [devtamjid.com](https://devtamjid.com)  
+- GitHub: [github.com/tamjid-mostafa](https://github.com/tamjid-mostafa)  
+- Email: hello@devtamjid.com  
+
+---
+
+> Built to unlock creativity with the power of AI.  
+> Fast. Interactive. Shareable.
