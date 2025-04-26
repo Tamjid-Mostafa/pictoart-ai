@@ -220,7 +220,7 @@ export const CommunityPost = ({ post }: CommunityPostProps) => {
             </motion.div>
 
             <div className="absolute top-2 right-2 flex gap-2 z-10">
-              {["download", "like", "share", "delete"].map((action, index) => (
+              {["download", "like", "share"].map((action, index) => (
                 <motion.div
                   key={`${animations.buttons.key}-${action}`}
                   variants={animations.buttons.variants}
@@ -228,7 +228,7 @@ export const CommunityPost = ({ post }: CommunityPostProps) => {
                     shouldAnimate ? (isHovered ? "hover" : "rest") : undefined
                   }
                 >
-                  {action === "delete" ? (
+                  {/* {action === "delete" ? (
                     <AlertDialog
                       open={showDeleteDialog}
                       onOpenChange={() => setShowDeleteDialog(true)}
@@ -279,7 +279,7 @@ export const CommunityPost = ({ post }: CommunityPostProps) => {
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
-                  ) : (
+                  ) : ( */}
                     <Button
                       size="icon"
                       onClick={
@@ -309,7 +309,7 @@ export const CommunityPost = ({ post }: CommunityPostProps) => {
                         <Share2 className="h-4 w-4 text-gray-700" />
                       )}
                     </Button>
-                  )}
+                  {/* )} */}
                 </motion.div>
               ))}
             </div>
