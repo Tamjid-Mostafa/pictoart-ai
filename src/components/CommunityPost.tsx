@@ -8,25 +8,13 @@ import { Button } from "./ui/button";
 import { useState, useMemo, useCallback, useRef, useTransition } from "react";
 import { cn, extractPublicId } from "@/lib/utils";
 import { downloadPost, toggleLike } from "@/lib/actions/post.action";
-import { useClerk } from "@clerk/nextjs";
+import { useAuth, useClerk } from "@clerk/nextjs";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useImageGenerationStore } from "@/store/imageGenerationStore";
 import { usePostStore } from "@/store/postStore";
-import {
-  AlertDialog,
-  AlertDialogTrigger,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogFooter,
-  AlertDialogCancel,
-  AlertDialogAction,
-  AlertDialogTitle,
-  AlertDialogDescription,
-} from "@/components/ui/alert-dialog";
-import { Trash2 } from "lucide-react";
-
+import { useRouter } from "next/navigation";
 interface CommunityPostProps {
   post: Post;
 }
@@ -39,9 +27,8 @@ export const CommunityPost = ({ post }: CommunityPostProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const isAnimating = post._id === animatingPostId;
   const isMobile = useIsMobile();
-  const { openSignIn, user } = useClerk();
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const { isSignedIn, userId } = useAuth();
+  const { openSignIn } = useClerk();
 
   // Create unique animation keys for each post
   const animationKeys = useMemo(
@@ -110,13 +97,11 @@ export const CommunityPost = ({ post }: CommunityPostProps) => {
   // Event handlers remain the same
   const handleLike = useCallback(async () => {
     try {
-      if (!user?.publicMetadata.userId) {
+      if (!isSignedIn) {
         openSignIn();
+        return;
       }
-      const response = await toggleLike(
-        post._id,
-        user?.publicMetadata.userId as string
-      );
+      const response = await toggleLike(post._id, userId);
       if (response.success) {
         // Refetch all active queries that begin with `posts` in the key
         await queryClient.refetchQueries({
@@ -127,10 +112,14 @@ export const CommunityPost = ({ post }: CommunityPostProps) => {
     } catch (error) {
       console.error(error);
     }
-  }, [user, openSignIn, post._id]);
+  }, [isSignedIn, openSignIn, post._id]);
 
   const handleDownload = useCallback(async () => {
     try {
+      if (!isSignedIn) {
+        openSignIn();
+        return;
+      }
       await downloadImageByURL(post._id);
       const response = await downloadPost(post._id);
 
@@ -144,10 +133,14 @@ export const CommunityPost = ({ post }: CommunityPostProps) => {
     } catch (error) {
       console.error(error);
     }
-  }, [user, openSignIn, post._id, downloadImageByURL, queryClient]);
+  }, [isSignedIn, openSignIn, post._id, downloadImageByURL, queryClient]);
 
   const handleShare = useCallback(async () => {
     try {
+      if (!isSignedIn) {
+        openSignIn();
+        return;
+      }
       const shareData = {
         title: "Check out this amazing creation!",
         text: post.prompt || "I just found this cool image!",
@@ -173,25 +166,19 @@ export const CommunityPost = ({ post }: CommunityPostProps) => {
       });
     }
   }, [post.prompt, post.photo]);
+  const router = useRouter();
 
   const handleStyleTry = useCallback(() => {
     setPrompt(post.prompt);
     setPalette(post.palette);
+    router.push("/start");
   }, [post.prompt, post.palette, setPrompt, setPalette]);
 
   const handleHoverStart = useCallback(() => setIsHovered(true), []);
   const handleHoverEnd = useCallback(() => setIsHovered(false), []);
 
-  const cardClassName = useMemo(
-    () =>
-      cn(
-        "group relative overflow-hidden rounded-xl shadow-md transition-shadow hover:shadow-xl"
-      ),
-    []
-  );
-  console.log(post.photo);
   return (
-    <Card className={cardClassName}>
+    <Card className="group relative overflow-hidden rounded-xl shadow-md transition-shadow hover:shadow-xl">
       <motion.div
         initial="rest"
         animate={isHovered ? "hover" : "rest"}
@@ -280,35 +267,35 @@ export const CommunityPost = ({ post }: CommunityPostProps) => {
                       </AlertDialogContent>
                     </AlertDialog>
                   ) : ( */}
-                    <Button
-                      size="icon"
-                      onClick={
-                        action === "download"
-                          ? handleDownload
-                          : action === "like"
-                          ? handleLike
-                          : handleShare
-                      }
-                      variant="secondary"
-                      className="bg-white/90 backdrop-blur-sm hover:bg-white"
-                    >
-                      {action === "download" && (
-                        <Download className="h-4 w-4 text-gray-700" />
-                      )}
-                      {action === "like" && (
-                        <Heart
-                          className={cn(
-                            "h-4 w-4",
-                            post.isLiked
-                              ? "fill-red-500 text-red-500"
-                              : "text-gray-700"
-                          )}
-                        />
-                      )}
-                      {action === "share" && (
-                        <Share2 className="h-4 w-4 text-gray-700" />
-                      )}
-                    </Button>
+                  <Button
+                    size="icon"
+                    onClick={
+                      action === "download"
+                        ? handleDownload
+                        : action === "like"
+                        ? handleLike
+                        : handleShare
+                    }
+                    variant="secondary"
+                    className="bg-white/90 backdrop-blur-sm hover:bg-white"
+                  >
+                    {action === "download" && (
+                      <Download className="h-4 w-4 text-gray-700" />
+                    )}
+                    {action === "like" && (
+                      <Heart
+                        className={cn(
+                          "h-4 w-4",
+                          post.isLiked
+                            ? "fill-red-500 text-red-500"
+                            : "text-gray-700"
+                        )}
+                      />
+                    )}
+                    {action === "share" && (
+                      <Share2 className="h-4 w-4 text-gray-700" />
+                    )}
+                  </Button>
                   {/* )} */}
                 </motion.div>
               ))}
